@@ -34,4 +34,17 @@ TEST_F(MetaFunction, Fractorial) {
   EXPECT_EQ(6, result);
 }
 
+template <int N>
+struct int_{};
+
+template <typename T, int N,
+  typename std::enable_if<(N > 0)>::type* = nullptr>
+auto add_pointer(T, int_<N>)
+  -> decltype(add_pointer(std::declval<T*>(), int_<N-1>()));
+
+template <typename T, int N,
+  typename std::enable_if<N == 0>::type* = nullptr>
+auto add_pointer(T, int_<N>) -> T;
+
+typedef decltype(add_pointer(std::declval<int>(), int_<3>())) result;
 }  // namespace meta_function
