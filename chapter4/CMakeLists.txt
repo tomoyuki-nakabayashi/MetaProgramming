@@ -39,5 +39,8 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
-add_executable(meta_function meta_function.cpp)
+add_executable(meta_function
+  meta_function.cpp
+  typelist.cpp
+  )
 target_link_libraries(meta_function gtest_main)
