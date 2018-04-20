@@ -82,4 +82,19 @@ void sort(Range& r) {
   std::sort(std::begin(r), std::end(r));
 }
 
+TEST_F(SFINAE, SwitchSort) {
+  std::vector<int> v = {3, 1, 4};
+  std::list<int> ls = {3, 1, 4};
+
+  sort(v);
+  sort(ls);
+
+  std::vector<int> expect_v = {1, 3, 4};
+  std::list<int> expect_ls = {1, 3, 4};
+  EXPECT_EQ(expect_v, v);
+  EXPECT_EQ(expect_ls, ls);
+}
+
+
+
 }  // namespace sfinae
