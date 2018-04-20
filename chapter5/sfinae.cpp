@@ -95,6 +95,4 @@ TEST_F(SFINAE, SwitchSort) {
   EXPECT_EQ(expect_ls, ls);
 }
 
-
-
 }  // namespace sfinae
