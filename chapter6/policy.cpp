@@ -42,10 +42,24 @@ struct multi_thread {
 };
 
 template <class>
-struct is_ownership_policy;
+struct is_ownership_policy {
+  static const bool value = false;
+};
+
+template <class Strategy>
+struct is_ownership_policy<ownership<Strategy>> {
+  static const bool value = true;
+};
 
 template <class>
-struct is_multi_thread_policy;
+struct is_multi_thread_policy {
+  static const bool value = false; 
+};
+
+template <bool IsMultiThread>
+struct is_multi_thread_policy<multi_thread<IsMultiThread>> {
+  static const bool value = true;
+}
 
 template <class... Args>
 struct smart_ptr {
@@ -56,4 +70,37 @@ struct smart_ptr {
                                     Args...>::type multi_thread_policy;
 }
 
+struct not_found {};
+
+template <template <class> class Pred, class Head, class... Tail>
+struct find_if_impl {
+  typedef typename std::conditional<
+    Pread<Head>::value, Head,
+    typename find_if_impl<Pred, Tail...>::type>::type type;
+};
+
+template <template <class> class Pred, class Head>
+struct find_if_impl<Pred, Head> {
+  typedef typename std::conditional<Pred<Head>::value, Head, not_found>::type type;
+};
+
+template <template <class> class Pred, class... List>
+struct find_if {
+  typedef typename find_if_impl<Pred, List...>::type type;
+};
+
+template <template <class> class Pred, class... List>
+struct get_required_arg {
+  typedef typename find_if<Pred, List...>::type type;
+  static_assert(!std::is_same<type, not_found>::value, "required policy not found");
+};
+
+template <class Opt, template <class> class Pred, class... List>
+struct get_optional_arg {
+  private:
+    typedef typename find_if<Pred, List...>type result;
+  public:
+    typedef typename std::conditional<!std::is_same<result, not_found>::value,
+                                      result, Opt>::type type;
+};
 }  // namespace policy
