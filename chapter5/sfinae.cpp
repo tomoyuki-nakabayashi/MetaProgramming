@@ -74,6 +74,32 @@ TEST_F(SFINAE, IsAssignable) {
   static_assert( is_assignable<B>::value, "Can substitute.");
 }
 
+struct is_addable_impl {
+  template <class T, class U>
+  static auto check(T*, U*) -> decltype(
+    std::declval<T>() + std::declval<U>(),
+    std::true_type());
+
+  template <class T, class U>
+  static auto check(...) -> std::false_type;
+};
+
+template <class T, class U>
+struct is_addable
+    : decltype(is_addable_impl::check<T, U>(nullptr, nullptr)) {};
+
+namespace addable {
+struct A {};
+struct B {};
+    B operator+(const B&, const B&) { return B(); }
+}
+
+TEST_F(SFINAE, IsAddable) {
+  static_assert(!is_addable<addable::A, addable::A>::value, "Is not addable.");
+  static_assert(is_addable<addable::B, addable::B>::value, "Is addable.");
+  static_assert(is_addable<int, double>::value, "Is addable.");
+}
+
 struct has_sort_member_impl {
   template <class T>
   static auto check(T*) -> decltype(
