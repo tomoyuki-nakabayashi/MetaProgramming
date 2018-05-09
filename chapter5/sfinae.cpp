@@ -8,6 +8,8 @@
 #include <list>
 #include <algorithm>
 #include <iterator>
+#include <cstring>
+#include <iostream>
 #include <gtest/gtest.h>
 
 namespace sfinae {
@@ -138,6 +140,39 @@ TEST_F(SFINAE, SwitchSort) {
   std::list<int> expect_ls = {1, 3, 4};
   EXPECT_EQ(expect_v, v);
   EXPECT_EQ(expect_ls, ls);
+}
+
+template <class Iterator,
+          typename std::enable_if<
+                    std::is_pointer<Iterator>::value &&
+                    std::is_trivially_assignable<typename std::iterator_traits<Iterator>::value_type>::value &&
+                    std::is_trivially_destructible<typename std::iterator_traits<Iterator>::value_type>::value
+                   >::type* = nullptr
+         >
+
+
+template <class InputIterator, class OutputIterator>
+OutputIterator copy(InputIterator first, InputIterator last,
+                    OutputIterator out) {
+  std::cout << "loop copy" << std::endl;
+  for (; first != last; ++out, ++first) {
+    *out = *first;
+  }
+  return out;
+}
+
+TEST_F(SFINAE, CopyOptimization) {
+  int ar1[3] = {3, 1, 4};
+  int ar2[3] = {};
+
+  sfinae::copy(std::begin(ar1), std::end(ar1), std::begin(ar2));
+  for (auto i = 0; i < 3; ++i) EXPECT_EQ(ar1[i], ar2[i]);
+
+  std::list<int> ls1 = {3, 1, 4};
+  std::list<int> ls2 = {};
+
+  sfinae::copy(std::begin(ls1), std::end(ls1), std::begin(ls2));
+  EXPECT_EQ(ls1, ls2);
 }
 
 }  // namespace sfinae
