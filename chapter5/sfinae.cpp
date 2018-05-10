@@ -145,11 +145,15 @@ TEST_F(SFINAE, SwitchSort) {
 template <class Iterator,
           typename std::enable_if<
                     std::is_pointer<Iterator>::value &&
-                    std::is_trivially_assignable<typename std::iterator_traits<Iterator>::value_type>::value &&
-                    std::is_trivially_destructible<typename std::iterator_traits<Iterator>::value_type>::value
+                    std::is_trivially_assignable<std::remove_pointer<Iterator>, const std::remove_pointer<Iterator>>::value &&
+                    std::is_trivially_destructible<std::remove_pointer<Iterator>>::value
                    >::type* = nullptr
          >
-
+Iterator copy(Iterator first, Iterator last, Iterator out) {
+  std::cout << "memmove" << std::endl;
+  std::memmove(out, first, (last - first) * sizeof(decltype(*first)));
+  return out + (last - first);
+}
 
 template <class InputIterator, class OutputIterator>
 OutputIterator copy(InputIterator first, InputIterator last,
@@ -169,7 +173,7 @@ TEST_F(SFINAE, CopyOptimization) {
   for (auto i = 0; i < 3; ++i) EXPECT_EQ(ar1[i], ar2[i]);
 
   std::list<int> ls1 = {3, 1, 4};
-  std::list<int> ls2 = {};
+  std::list<int> ls2(3);
 
   sfinae::copy(std::begin(ls1), std::end(ls1), std::begin(ls2));
   EXPECT_EQ(ls1, ls2);
