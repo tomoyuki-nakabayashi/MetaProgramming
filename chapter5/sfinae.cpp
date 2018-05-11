@@ -179,4 +179,47 @@ TEST_F(SFINAE, CopyOptimization) {
   EXPECT_EQ(ls1, ls2);
 }
 
+namespace destroy {
+template <class T,
+          typename std::enable_if<std::is_trivially_destructible<T>::value>::type* = nullptr>
+void destroy_all(T*, T*) {
+  std::cout << "don't destroy" << std::endl;
+}
+
+template <class T,
+          typename std::enable_if<!std::is_trivially_destructible<T>::value>::type* = nullptr>
+void destroy_all(T* first, T* last) {
+  std::cout << "loop destroy" << std::endl;
+  while (first != last) {
+    first->~T();
+    ++first;
+  }
+}
+
+template <class T>
+void construct_all(T* first, T* last) {
+  while (first != last) {
+    new (first) T();
+    ++first;
+  }
+}
+
+template <class T>
+void f() {
+  std::allocator<T> alloc;
+
+  std::size_t size = 3;
+  T* ar = alloc.allocate(size, nullptr);
+  construct_all(ar, ar + size);
+
+  destroy_all(ar, ar + size);
+  alloc.deallocate(ar, size);
+}
+}
+
+TEST_F(SFINAE, DestroyAll) {
+  destroy::f<std::string>();
+  destroy::f<int>();
+}
+
 }  // namespace sfinae
