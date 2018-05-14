@@ -59,23 +59,14 @@ struct is_multi_thread_policy {
 template <bool IsMultiThread>
 struct is_multi_thread_policy<multi_thread<IsMultiThread>> {
   static const bool value = true;
-}
-
-template <class... Args>
-struct smart_ptr {
-  typedef typename get_required_arg<is_ownerchip_policy, Args...>::type
-      ownership_policy;
-
-  typedef typename get_optional_arg<multi_thread<false>, is_multi_thread_policy,
-                                    Args...>::type multi_thread_policy;
-}
+};
 
 struct not_found {};
 
 template <template <class> class Pred, class Head, class... Tail>
 struct find_if_impl {
   typedef typename std::conditional<
-    Pread<Head>::value, Head,
+    Pred<Head>::value, Head,
     typename find_if_impl<Pred, Tail...>::type>::type type;
 };
 
@@ -98,9 +89,17 @@ struct get_required_arg {
 template <class Opt, template <class> class Pred, class... List>
 struct get_optional_arg {
   private:
-    typedef typename find_if<Pred, List...>type result;
+    typedef typename find_if<Pred, List...>::type result;
   public:
     typedef typename std::conditional<!std::is_same<result, not_found>::value,
                                       result, Opt>::type type;
+};
+
+template <class... Args>
+struct smart_ptr {
+  typedef typename get_required_arg<is_ownership_policy, Args...>::type ownership_policy;
+
+  typedef typename get_optional_arg<multi_thread<false>, is_multi_thread_policy,
+                                    Args...>::type multi_thread_policy;
 };
 }  // namespace policy
