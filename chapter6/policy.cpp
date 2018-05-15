@@ -102,4 +102,8 @@ struct smart_ptr {
   typedef typename get_optional_arg<multi_thread<false>, is_multi_thread_policy,
                                     Args...>::type multi_thread_policy;
 };
+
+TEST_F(POLICY, SmartPointer) {
+  smart_ptr<multi_thread<true>, ownership<reference_count>> p;
+}
 }  // namespace policy
