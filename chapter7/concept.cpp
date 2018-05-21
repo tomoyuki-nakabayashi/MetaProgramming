@@ -55,6 +55,17 @@ point operator-(const point& a, const point& b) {
   return point(a.x() - b.x(), a.y() - b.y());
 }
 
+class MyPoint {
+    double x_ = 0;
+    double y_ = 0;
+ public:
+    MyPoint() = default;
+    MyPoint(double x, double y) : x_{x}, y_{y} {}
+
+    double getX() const { return x_; }
+    double getY() const { return y_; }
+};
+
 template <class T>
 struct point_traits {
   static double x(const T& p) { return p.x(); }
@@ -62,6 +73,16 @@ struct point_traits {
 
   static T subtract(const T& a, const T& b) {
     return T(a.x() - b.x(), a.y() - b.y());
+  }
+};
+
+template <>
+struct point_traits<MyPoint> {
+  static double x(const MyPoint& p) { return p.getX(); }
+  static double y(const MyPoint& p) { return p.getY(); }
+
+  static MyPoint subtract(const MyPoint& a, const MyPoint&b) {
+    return MyPoint(a.getX() - b.getX(), a.getY() - b.getY());
   }
 };
 
@@ -75,8 +96,11 @@ double distance(Point a, Point b) {
 TEST_F(CONCEPT, Point) {
   point a(0.0, 0.0);
   point b(3.0, 3.0);
+  MyPoint mpa(0.0, 0.0);
+  MyPoint mpb(3.0, 3.0);
 
   EXPECT_NEAR(4.24264, distance(a, b), 0.00001);
+  EXPECT_NEAR(4.24264, distance(mpa, mpb), 0.00001);
 }
 
 }  // namespace concept
