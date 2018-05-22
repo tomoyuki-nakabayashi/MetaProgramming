@@ -103,4 +103,60 @@ TEST_F(CONCEPT, Point) {
   EXPECT_NEAR(4.24264, distance(mpa, mpb), 0.00001);
 }
 
+namespace overload_by_concept {
+
+template <class Point>
+class line_segment {
+  Point p1_;
+  Point p2_;
+ public:
+  typedef Point point_type;
+
+  line_segment() = default;
+  line_segment(const Point& p1, const Point& p2): p1_{p1}, p2_{p2} {}
+
+  const Point& p1() const { return p1_; }
+  const Point& p2() const { return p2_; }
+};
+
+template <class T>
+struct line_segment_traits {
+  typedef typename T::point_type point_type;
+
+  static const point_type& p1(const T& line) { return line.p1(); }
+  static const point_type& p2(const T& line) { return line.p2(); }
+};
+
+struct point_category {};
+struct line_segment_category {};
+
+template <class T>
+struct get_geometry_category;
+
+template <>
+struct get_geometry_category<point> {
+  typedef point_category type;
+};
+
+template <class Point>
+struct get_geometry_category<line_segment<Point>> {
+  typedef line_segment_category type;
+};
+
+template <class Geometry1, class Geometry2>
+double distance(Geometry1 a, Geometry2 b) {
+  return distance_impl(a, b,
+      typename get_geometry_category<Geometry1>::type(),
+      typename get_geometry_category<Geometry2>::type());
+}
+
+template <class Point>
+double distance_impl(Point a, Point b, point_category, point_category) {
+  typedef point_traits<Point> traits;
+  const Point d = traits::subtract(a, b);
+  return std::sqrt(traits::x(d) * traits::x(d) + traits::y(d) * traits::y(d));
+}
+
+}  // overload_by_concept
+
 }  // namespace concept
