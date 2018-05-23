@@ -3,6 +3,8 @@
 
 #include <gtest/gtest.h>
 #include <utility>
+#include <cmath>
+#include <algorithm>
 
 namespace concept {
 
@@ -10,7 +12,6 @@ class CONCEPT : public ::testing::Test {
 };
 
 namespace min {
-
 
 struct is_less_than_comparable_impl {
   template <class T, class U>
@@ -33,7 +34,7 @@ const T& min(const T& a, const T& b) {
 }
 
 class X{};
-}
+}  // namespace min
 
 TEST_F(CONCEPT, Min) {
   EXPECT_EQ(1, min::min(1, 2));
@@ -103,8 +104,6 @@ TEST_F(CONCEPT, Point) {
   EXPECT_NEAR(4.24264, distance(mpa, mpb), 0.00001);
 }
 
-namespace overload_by_concept {
-
 template <class Point>
 class line_segment {
   Point p1_;
@@ -143,13 +142,6 @@ struct get_geometry_category<line_segment<Point>> {
   typedef line_segment_category type;
 };
 
-template <class Geometry1, class Geometry2>
-double distance(Geometry1 a, Geometry2 b) {
-  return distance_impl(a, b,
-      typename get_geometry_category<Geometry1>::type(),
-      typename get_geometry_category<Geometry2>::type());
-}
-
 template <class Point>
 double distance_impl(Point a, Point b, point_category, point_category) {
   typedef point_traits<Point> traits;
@@ -157,6 +149,31 @@ double distance_impl(Point a, Point b, point_category, point_category) {
   return std::sqrt(traits::x(d) * traits::x(d) + traits::y(d) * traits::y(d));
 }
 
-}  // overload_by_concept
+template <class Point, class LineSegment>
+double distance_impl(Point a, LineSegment b, point_category, line_segment_category) {
+  typedef line_segment_traits<LineSegment> traits;
+  return std::min(distance(a, traits::p1(b)), distance(a, traits::p2));
+}
+
+template <class LineSegment, class Point>
+double distance_impl(LineSegment a, Point b, line_segment_category, point_category) {
+  return distance(b, a);
+}
+
+template <class Geometry1, class Geometry2>
+double distance(Geometry1 a, Geometry2 b) {
+  return distance_impl(a, b,
+      typename get_geometry_category<Geometry1>::type(),
+      typename get_geometry_category<Geometry2>::type());
+}
+
+TEST_F(CONCEPT, OverloadedDistance) {
+  point p1(0.0, 0.0);
+  point p2(3.0, 3.0);
+  line_segment<point> line(point(2.0, 2.0), point(3.0, 3.0));
+
+  EXPECT_NEAR(4.24264, distance(p1, p2), 0.00001);
+  EXPECT_NEAR(4.24264, distance(p1, line), 0.00001);
+}
 
 }  // namespace concept
