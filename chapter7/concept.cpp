@@ -176,4 +176,56 @@ TEST_F(CONCEPT, OverloadedDistance) {
   //EXPECT_NEAR(4.24264, distance(p1, line), 0.00001);
 }
 
+namespace geo {
+
+template <class T>
+struct is_point_category {
+  static const bool value = false;
+};
+
+template <class T>
+struct point_traits {
+  static double getX(const T& p) { return p.getX(); }
+  static double getY(const T& p) { return p.getY(); }
+
+  static T subtract(const T& a, const T& b) {
+    return T(a.getX() - b.getX(), a.getY() - b.getY());
+  }
+};
+
+class point {
+    double x_ = 0;
+    double y_ = 0;
+ public:
+    point() = default;
+    point(double x, double y) : x_{x}, y_{y} {}
+
+    double getX() const { return x_; }
+    double getY() const { return y_; }
+};
+
+template <>
+struct is_point_category<point> {
+  static const bool value = true;
+};
+
+template <>
+struct point_traits<std:::pair<double, double>> {
+  typedef std::pair<double, double> point_type;
+
+  static double getX(const point_type& p) { return p.first; }
+  static double getY(const point_type& p) { return p.second; }
+
+  static point_type subtract(const point_type& a, const point_type& b) {
+    return std::make_pair(a.first - b.first, a.second - b.second);
+  }
+};
+
+template <>
+struct is_point_category<std::pair<double, double>> {
+  static const bool value = true;
+}
+
+}  // namespace geo
+
 }  // namespace concept
