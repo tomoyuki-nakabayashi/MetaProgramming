@@ -228,4 +228,33 @@ struct is_point_category<std::pair<double, double>> {
 
 }  // namespace geo
 
+template <class T, class Enable = void>
+struct get_geometry_category;
+
+template <class T, class Enable = void>
+struct point_traits;
+
+template <class T>
+struct get_geometry_category<T,
+    typename std::enable_if<geo::is_point_category<T>>::type> {
+  typedef point_category type;
+}
+
+template <class T>
+struct pont_traits<T, typename std::enable_if<geo::is_point_category<T>>::type> {
+  static double x(const T& p) {
+    return geo::point_traits<T>::getX(p);
+  }
+  static double y(const T& p) {
+    return geo::point_traits<T>::getY(p);
+  }
+
+  static subtract(const T& a, const T& b) {
+    return geo::point_traits<T>::subtract(a, b);
+  }
+}
+
+
+TEST_F(CONCEPT)
+
 }  // namespace concept
