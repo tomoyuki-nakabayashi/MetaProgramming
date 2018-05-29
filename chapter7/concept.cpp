@@ -176,6 +176,7 @@ TEST_F(CONCEPT, OverloadedDistance) {
   //EXPECT_NEAR(4.24264, distance(p1, line), 0.00001);
 }
 
+namespace template_specialization{
 namespace geo {
 
 template <class T>
@@ -210,7 +211,7 @@ struct is_point_category<point> {
 };
 
 template <>
-struct point_traits<std:::pair<double, double>> {
+struct point_traits<std::pair<double, double>> {
   typedef std::pair<double, double> point_type;
 
   static double getX(const point_type& p) { return p.first; }
@@ -224,7 +225,7 @@ struct point_traits<std:::pair<double, double>> {
 template <>
 struct is_point_category<std::pair<double, double>> {
   static const bool value = true;
-}
+};
 
 }  // namespace geo
 
@@ -236,12 +237,12 @@ struct point_traits;
 
 template <class T>
 struct get_geometry_category<T,
-    typename std::enable_if<geo::is_point_category<T>>::type> {
+    typename std::enable_if<geo::is_point_category<T>::value>> {
   typedef point_category type;
-}
+};
 
 template <class T>
-struct pont_traits<T, typename std::enable_if<geo::is_point_category<T>>::type> {
+struct point_traits<T, typename std::enable_if<geo::is_point_category<T>::value>::type> {
   static double x(const T& p) {
     return geo::point_traits<T>::getX(p);
   }
@@ -249,12 +250,24 @@ struct pont_traits<T, typename std::enable_if<geo::is_point_category<T>>::type> 
     return geo::point_traits<T>::getY(p);
   }
 
-  static subtract(const T& a, const T& b) {
+  static T subtract(const T& a, const T& b) {
     return geo::point_traits<T>::subtract(a, b);
   }
+};
+
+
+TEST_F(CONCEPT, TemplateSpecialization) {
+  geo::point p1(0.0, 0.0);
+  geo::point p2(3.0, 3.0);
+  double d1 = distance(p1, p2);
+
+  std::pair<double, double> p3(0.0, 0.0);
+  std::pair<double, double> p4(3.0, 3.0);
+  double d2 = distance(p3, p4);
+
+  EXPECT_EQ(d1, d2);
 }
 
-
-TEST_F(CONCEPT)
+}  // template_specialization
 
 }  // namespace concept
