@@ -41,5 +41,6 @@ endif()
 
 add_executable(concept
   concept.cpp
+  concept_specialization.cpp
   )
 target_link_libraries(concept gtest_main)
